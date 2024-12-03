@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Your Slot</title>
+    <style>
+        /* Button styling */
+        #bookSlotButton {
+            padding: 10px 20px;
+            background-color: #48ff66;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        /* Popup iframe styling */
+        .iframe-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 500px;
+            background-color: white;
+            border: 2px solid #48ff66;
+            z-index: 1000;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Overlay for background */
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 999;
+        }
+
+        /* Close button styling */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #48ff66;
+        }
+
+        /* Form styling */
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input,
+        select {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input[type="submit"] {
+            background-color: #48ff66;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Success message styling */
+        .success-message {
+            display: none;
+            color: green;
+            font-size: 18px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Button to open the iframe popup -->
+    <button id="bookSlotButton">Book Slot</button>
+
+    <!-- Overlay for background -->
+    <div id="overlay"></div>
+
+    <!-- Popup iframe -->
+    <div class="iframe-popup" id="popupForm">
+        <span class="close-btn" id="closePopup">&times;</span>
+        <h2>Book Your Slot</h2>
+        <form id="bookSlotForm" method="post" action="https://formspree.io/f/movqqlrw">
+            <input type="text" name="name" id="name" placeholder="Your Name" required>
+            <input type="number" name="age" id="age" placeholder="Your Age" required>
+            <input type="tel" name="contact" id="contact" placeholder="Your Contact Number" required>
+            <select name="class" id="class" required>
+                <option value="">Select Interest </option>
+                <option value="Share Market Class">Share Market Class</option>
+                <option value="Mutual Funds">Mutual Funds</option>
+                <option value="Financial Consultation">Financial Consultation</option>
+            </select>
+            <select name="timeSlot" id="timeSlot" required>
+                <option value="">Select Time Slot</option>
+                <option value="Morning">Morning</option>
+                <option value="Afternoon">Afternoon</option>
+                <option value="Evening">Evening</option>
+            </select>
+            <input type="submit" value="Submit">
+        </form>
+        <p class="form-message" id="formMessage"></p>
+        <div class="success-message" id="successMessage" style="display: none;">Submitted successfully!</div>
+    </div>
+
+    <script>
+        // Show the popup and overlay when the button is clicked
+        document.getElementById('bookSlotButton').addEventListener('click', function () {
+            document.getElementById('popupForm').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        });
+
+        // Close the popup when the close button or overlay is clicked
+        document.getElementById('closePopup').addEventListener('click', function () {
+            document.getElementById('popupForm').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        });
+
+        document.getElementById('overlay').addEventListener('click', function () {
+            document.getElementById('popupForm').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        });
+
+        document.getElementById('bookSlotForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent form submission for validation
+
+            let name = document.getElementById('name').value.trim();
+            let age = document.getElementById('age').value.trim();
+            let contact = document.getElementById('contact').value.trim();
+            let selectedClass = document.getElementById('class').value;
+            let timeSlot = document.getElementById('timeSlot').value;
+            let formMessage = document.getElementById('formMessage');
+            let successMessage = document.getElementById('successMessage');
+
+            // Clear previous messages
+            formMessage.textContent = '';
+            successMessage.style.display = 'none';
+
+            // Basic validation
+            if (name === '' || age === '' || contact === '' || selectedClass === '' || timeSlot === '') {
+                formMessage.textContent = 'Please fill out all fields.';
+                formMessage.style.color = 'red';
+                return;
+            }
+
+            // Validate contact number (simple pattern for 10-digit numbers)
+            let contactPattern = /^[0-9]{10}$/;
+            if (!contactPattern.test(contact)) {
+                formMessage.textContent = 'Please enter a valid contact number.';
+                formMessage.style.color = 'red';
+                return;
+            }
+
+            // If validation passes, submit the form
+            fetch('https://formspree.io/f/movqqlrw', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    age: age,
+                    contact: contact,
+                    class: selectedClass,
+                    timeSlot: timeSlot
+                })
+            }).then(response => {
+                if (response.ok) {
+                    successMessage.style.display = 'block'; // Show success message
+                    document.getElementById('bookSlotForm').reset(); // Clear the form
+                } else {
+                    formMessage.textContent = 'Failed to submit. Please try again later.';
+                    formMessage.style.color = 'red';
+                }
+            }).catch(error => {
+                formMessage.textContent = 'An error occurred. Please try again.';
+                formMessage.style.color = 'red';
+            });
+        });
+    </script>
+
+</body>
+
+</html>
